@@ -1,11 +1,90 @@
+# build command
+# workspaces-images % docker buildx build --platform=linux/amd64,linux/arm64 -t ghcr.io/cincibrainlab/signalfloweeg-autoclean:latest -f dockerfile-kasm-ubuntu-noble-dind . --push
+
 ARG BASE_TAG="develop"
 ARG BASE_IMAGE="core-ubuntu-noble"
 FROM kasmweb/$BASE_IMAGE:$BASE_TAG
 USER root
 
-ENV HOME /home/kasm-default-profile
-ENV STARTUPDIR /dockerstartup
+ENV HOME=/home/kasm-default-profile
+ENV STARTUPDIR=/dockerstartup
 WORKDIR $HOME
+
+
+# Install and configure bash shell enhancements
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        bash-completion \
+        command-not-found \
+        git \
+        nano && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install necessary dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        git \
+        libxcb1 \
+        libxcb-render0 \
+        libxcb-shape0 \
+        libxcb-xfixes0 \
+        libxcb-randr0 \
+        libxcb-glx0 \
+        libxcb-keysyms1 \
+        libxcb-image0 \
+        libxcb-icccm4 \
+        libxcb-sync1 \
+        libxcb-util1 \
+        libxcb-xkb1 \
+        libxcb-cursor0 \
+        libx11-xcb1 \
+        libxrender1 \
+        libxi6 \
+        libxkbcommon-x11-0 \
+        gnome-keyring && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install additional build dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cython3 \
+        pkg-config \
+        libcairo2-dev \
+        cmake \
+        build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        git \
+        libxcb1 \
+        libxcb-render0 \
+        libxcb-shape0 \
+        libxcb-xfixes0 \
+        libxcb-randr0 \
+        libxcb-glx0 \
+        libxcb-keysyms1 \
+        libxcb-image0 \
+        libxcb-icccm4 \
+        libxcb-sync1 \
+        libxcb-util1 \
+        libxcb-xkb1 \
+        libxcb-cursor0 \
+        libx11-xcb1 \
+        libxrender1 \
+        libxi6 \
+        libxkbcommon-x11-0 \
+        gnome-keyring \
+        pkg-config \
+        cmake \
+        libcairo2-dev \
+        python3-dev \
+        build-essential \
+        qtbase5-dev \ 
+        qtbase5-dev-tools && \
+    rm -rf /var/lib/apt/lists/*
 
 ### Envrionment config
 ENV DEBUG=false \
@@ -43,8 +122,11 @@ RUN \
   chown -R 1000:0 /home/kasm-user && \
   rm -Rf ${INST_DIR}
 
+# Install UV
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 # Userspace Runtime
-ENV HOME /home/kasm-user
+ENV HOME=/home/kasm-user
 WORKDIR $HOME
 USER 1000
 
